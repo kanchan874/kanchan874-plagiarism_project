@@ -1,3 +1,4 @@
+require('dotenv').config(); // Load .env FIRST before any other imports
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
