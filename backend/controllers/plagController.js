@@ -11,7 +11,9 @@ const RESULTS_DIR = path.join(__dirname, '..', 'results');
 // Ensure results directory exists
 (async () => {
   try {
-    await fs.mkdir(RESULTS_DIR, { recursive: true });
+    if (!process.env.VERCEL) {
+      await fs.mkdir(RESULTS_DIR, { recursive: true });
+    }
   } catch (err) {}
 })();
 
@@ -234,8 +236,12 @@ const checkPlagiarism = async (req, res) => {
     if (dbConfig.isConnected()) {
       await new Report(reportData).save();
     } else {
-      const filepath = path.join(RESULTS_DIR, `${resultId}.json`);
-      await fs.writeFile(filepath, JSON.stringify(reportData, null, 2), 'utf8');
+      if (!process.env.VERCEL) {
+        const filepath = path.join(RESULTS_DIR, `${resultId}.json`);
+        await fs.writeFile(filepath, JSON.stringify(reportData, null, 2), 'utf8');
+      } else {
+        console.warn("[Vercel] Database is offline; cannot save local fallback JSON report on read-only filesystem.");
+      }
     }
 
     res.json({

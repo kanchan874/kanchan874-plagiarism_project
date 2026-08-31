@@ -5,8 +5,12 @@ const path = require('path');
 const { checkPlagiarism, getReport } = require('../controllers/plagController');
 
 // Configure upload folder
+const uploadDir = process.env.VERCEL 
+  ? '/tmp' 
+  : path.join(__dirname, '..', 'uploads');
+
 const upload = multer({
-  dest: path.join(__dirname, '..', 'uploads'),
+  dest: uploadDir,
   limits: { fileSize: 300 * 1024 * 1024 } // 300 MB limit
 });
 

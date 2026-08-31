@@ -30,8 +30,10 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', version: '2.0.0', engine: 'js-plagcheck' });
 });
 
-app.listen(PORT, () => {
-  console.log(`[MERN Server] Server listening on port ${PORT}`);
-});
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`[MERN Server] Server listening on port ${PORT}`);
+  });
+}
 
 module.exports = app;
