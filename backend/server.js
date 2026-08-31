@@ -28,6 +28,21 @@ if (!process.env.VERCEL) {
 // API routes
 app.use('/api', plagRoutes);
 
+// Root route - API info
+app.get('/', (req, res) => {
+  res.json({
+    name: 'PlagCheck API',
+    version: '2.0.0',
+    status: 'running',
+    endpoints: {
+      health: '/health',
+      check: 'POST /api/check',
+      upload: 'POST /api/upload',
+      report: 'GET /api/report/:id'
+    }
+  });
+});
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', version: '2.0.0', engine: 'js-plagcheck' });
