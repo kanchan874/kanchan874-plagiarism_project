@@ -1,21 +1,24 @@
 const fs = require('fs').promises;
 const path = require('path');
-const pdfParse = require('pdf-parse');
-const mammoth = require('mammoth');
+
+// NOTE: pdf-parse and mammoth are lazy-loaded inside functions
+// to avoid Vercel cold-start crashes caused by top-level require()
 
 const readTxt = async (filepath) => {
   return await fs.readFile(filepath, 'utf8');
 };
 
 const readPdf = async (filepath) => {
+  // Lazy-load pdf-parse only when needed — prevents Vercel startup crash
+  const pdfParse = require('pdf-parse');
   const buffer = await fs.readFile(filepath);
-  const { PDFParse } = require('pdf-parse');
-  const parser = new PDFParse({ data: buffer });
-  const data = await parser.getText();
+  const data = await pdfParse(buffer);
   return data.text || '';
 };
 
 const readDocx = async (filepath) => {
+  // Lazy-load mammoth only when needed
+  const mammoth = require('mammoth');
   const result = await mammoth.extractRawText({ path: filepath });
   return result.value || '';
 };
