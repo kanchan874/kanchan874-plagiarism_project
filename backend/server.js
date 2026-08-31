@@ -16,10 +16,12 @@ app.use(cors());
 app.use(express.json({ limit: '350mb' }));
 app.use(express.urlencoded({ extended: true, limit: '350mb' }));
 
-// Ensure uploads directory exists
-const uploadsDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir);
+// Ensure uploads directory exists (local development only)
+if (!process.env.VERCEL) {
+  const uploadsDir = path.join(__dirname, 'uploads');
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir);
+  }
 }
 
 // API routes
