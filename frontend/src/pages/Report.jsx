@@ -14,7 +14,7 @@ function Report({ reportId, onViewHome }) {
       setLoading(true);
       setError('');
       try {
-        const response = await axios.get(`/api/report/${reportId}`);
+        const response = await api.get(`/api/report/${reportId}`);
         setReport(response.data);
         // Automatically select the first plagiarized sentence for inspection if available
         const firstPlag = response.data.sentences?.find(s => s.plagiarized);

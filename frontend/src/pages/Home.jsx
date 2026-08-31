@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
 
 function Home({ onViewReport }) {
   const [activeTab, setActiveTab] = useState('paste'); // 'paste' or 'upload'
@@ -106,7 +106,7 @@ function Home({ onViewReport }) {
         if (wordCount < 10) {
           throw new Error('Please enter at least 10 words to perform plagiarism check.');
         }
-        response = await axios.post('/api/check', {
+        response = await api.post('/api/check', {
           text: pasteText,
           search_web: searchWeb
         }, { headers });
@@ -117,7 +117,7 @@ function Home({ onViewReport }) {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('search_web', searchWeb);
-        response = await axios.post('/api/upload', formData, {
+        response = await api.post('/api/upload', formData, {
           headers: {
             ...headers,
             'Content-Type': 'multipart/form-data'
