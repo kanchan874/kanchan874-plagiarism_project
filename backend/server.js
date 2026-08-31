@@ -19,7 +19,7 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'X-API-Key', 'Authorization'],
 };
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // Handle pre-flight for all routes
+app.options('/(.*)', cors(corsOptions)); // Handle pre-flight for all routes
 app.use(express.json({ limit: '350mb' }));
 app.use(express.urlencoded({ extended: true, limit: '350mb' }));
 
