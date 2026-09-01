@@ -6,9 +6,13 @@ const dbConfig = require('../config/db');
 const { searchWebEngine, fetchWebTexts } = require('../utils/search');
 const { tokenizeSentences, getSentenceSimilarity } = require('../utils/similarity');
 
-const RESULTS_DIR = path.join(__dirname, '..', 'results');
+// On Vercel: /tmp is the only writable directory
+// On local:  use project /results folder
+const RESULTS_DIR = process.env.VERCEL
+  ? '/tmp'
+  : path.join(__dirname, '..', 'results');
 
-// Ensure results directory exists
+// Ensure results directory exists (local only — /tmp always exists on Vercel)
 (async () => {
   try {
     if (!process.env.VERCEL) {
@@ -66,8 +70,8 @@ const compareText = async (text, searchWeb = true) => {
         });
       });
 
-      // Scrape top 8 unique websites in parallel
-      const targetUrls = Array.from(searchUrls).slice(0, 8);
+      // Scrape top 10 unique websites in parallel
+      const targetUrls = Array.from(searchUrls).slice(0, 10);
       if (targetUrls.length > 0) {
         webTexts = await fetchWebTexts(targetUrls);
       }
@@ -232,16 +236,17 @@ const checkPlagiarism = async (req, res) => {
       ...analysis
     };
 
-    // Save report payload
+    // Save report payload — always persist so getReport() can retrieve it
     if (dbConfig.isConnected()) {
+      // Primary: MongoDB
       await new Report(reportData).save();
     } else {
-      if (!process.env.VERCEL) {
-        const filepath = path.join(RESULTS_DIR, `${resultId}.json`);
-        await fs.writeFile(filepath, JSON.stringify(reportData, null, 2), 'utf8');
-      } else {
-        console.warn("[Vercel] Database is offline; cannot save local fallback JSON report on read-only filesystem.");
-      }
+      // Fallback: JSON file on disk
+      // On Vercel: /tmp is writable and persists within the same function instance
+      // On local:  uses project /results directory
+      const filepath = path.join(RESULTS_DIR, `${resultId}.json`);
+      await fs.writeFile(filepath, JSON.stringify(reportData, null, 2), 'utf8');
+      console.log(`[Report] Saved to filesystem: ${filepath}`);
     }
 
     res.json({
@@ -269,7 +274,7 @@ const getReport = async (req, res) => {
     }
 
     if (!report) {
-      // Fallback: check file storage
+      // Fallback: check filesystem (works for /tmp on Vercel and /results locally)
       const filepath = path.join(RESULTS_DIR, `${resultId}.json`);
       try {
         const fileContent = await fs.readFile(filepath, 'utf8');
