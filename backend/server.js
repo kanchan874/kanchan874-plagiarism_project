@@ -1,3 +1,10 @@
+// Polyfill DOMMatrix for Node.js — required by pdf-parse v2 / canvas on Vercel serverless
+if (typeof globalThis.DOMMatrix === 'undefined') {
+  globalThis.DOMMatrix = class DOMMatrix {
+    constructor() { this.a=1;this.b=0;this.c=0;this.d=1;this.e=0;this.f=0; }
+    static fromMatrix() { return new globalThis.DOMMatrix(); }
+  };
+}
 require('dotenv').config(); // Load .env FIRST before any other imports
 const express = require('express');
 const cors = require('cors');

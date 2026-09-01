@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
 
 function Report({ reportId, onViewHome }) {
   const [report, setReport] = useState(null);

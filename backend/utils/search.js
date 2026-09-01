@@ -56,7 +56,7 @@ const searchBing = async (query, maxResults = 5) => {
       }
       const snippet = snippetEl.text().trim();
 
-      results.append = results.push({
+      results.push({
         title,
         url: actualUrl,
         snippet
