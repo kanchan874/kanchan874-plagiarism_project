@@ -249,12 +249,12 @@ const checkPlagiarism = async (req, res) => {
       console.log(`[Report] Saved to filesystem: ${filepath}`);
     }
 
+    // Return full report payload directly in POST response.
+    // This avoids any cross-serverless-instance /tmp read failure on Vercel.
+    // The frontend stores this in React state — no second GET needed.
     res.json({
       result_id: resultId,
-      similarity: reportData.similarity,
-      unique_percentage: reportData.unique_percentage,
-      status: reportData.status,
-      filename: reportData.filename
+      ...reportData
     });
   } catch (err) {
     res.status(500).json({ error: err.message });

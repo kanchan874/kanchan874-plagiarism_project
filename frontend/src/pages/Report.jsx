@@ -1,55 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import api from '../api';
+import React, { useState } from 'react';
 
-function Report({ reportId, onViewHome }) {
-  const [report, setReport] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+function Report({ reportData, onViewHome }) {
   const [selectedSentence, setSelectedSentence] = useState(null);
-  const [activeTab, setActiveTab] = useState('sources'); // 'sources' or 'history' (can show metadata)
+  const [activeTab, setActiveTab] = useState('sources');
 
-  // Fetch report payload on load
-  useEffect(() => {
-    const fetchReport = async () => {
-      setLoading(true);
-      setError('');
-      try {
-        const response = await api.get(`/api/report/${reportId}`);
-        setReport(response.data);
-        // Automatically select the first plagiarized sentence for inspection if available
-        const firstPlag = response.data.sentences?.find(s => s.plagiarized);
-        if (firstPlag) {
-          setSelectedSentence(firstPlag);
-        }
-      } catch (err) {
-        setError(err.response?.data?.error || 'Failed to retrieve plagiarism report.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (reportId) {
-      fetchReport();
+  // Auto-select the first plagiarized sentence on load
+  React.useEffect(() => {
+    if (reportData?.sentences) {
+      const firstPlag = reportData.sentences.find(s => s.plagiarized);
+      if (firstPlag) setSelectedSentence(firstPlag);
     }
-  }, [reportId]);
+  }, [reportData]);
 
-  if (loading) {
-    return (
-      <div className="report-wrap" style={{ textAlign: 'center', padding: '100px 24px' }}>
-        <div className="ps-item active" style={{ display: 'inline-flex', alignItems: 'center' }}>
-          <div className="ps-dot"></div>
-          <span style={{ fontSize: '1.25rem', fontWeight: 600, marginLeft: '12px' }}>Loading Plagiarism Report...</span>
-        </div>
-      </div>
-    );
-  }
-
-  if (error || !report) {
+  if (!reportData) {
     return (
       <div className="report-wrap" style={{ textAlign: 'center', padding: '80px 24px' }}>
         <span style={{ fontSize: '3rem', display: 'block', marginBottom: '16px' }}>⚠</span>
-        <h2 className="pane-title" style={{ marginBottom: '12px' }}>Failed to load report</h2>
-        <p className="pane-subtitle" style={{ marginBottom: '24px' }}>{error || 'No report payload available.'}</p>
+        <h2 className="pane-title" style={{ marginBottom: '12px' }}>No report available</h2>
+        <p className="pane-subtitle" style={{ marginBottom: '24px' }}>Please run a plagiarism check first.</p>
         <button className="pill active" onClick={onViewHome}>Return to Dashboard</button>
       </div>
     );
@@ -58,21 +26,17 @@ function Report({ reportId, onViewHome }) {
   const {
     similarity,
     unique_percentage,
-    matched_file,
     status,
-    word_count,
-    char_count,
     sentences,
     all_sources,
     filename
-  } = report;
+  } = reportData;
 
-  // Circular gauge circle geometry configs
+  // Circular gauge geometry
   const radius = 40;
-  const circumference = 2 * Math.PI * radius; // ~251.2
+  const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (circumference * similarity) / 100;
 
-  // Determine indicator color theme
   const getVerdictClass = (pct) => {
     if (pct >= 50) return 'high';
     if (pct >= 20) return 'mid';
@@ -81,14 +45,13 @@ function Report({ reportId, onViewHome }) {
 
   const verdictClass = getVerdictClass(similarity);
 
-  // Helper: highlights matching words in the original sentence
+  // Highlight matching words between two text snippets
   const renderWordDiff = (sentenceText, referenceText) => {
     if (!sentenceText || !referenceText) return sentenceText;
     const cleanWord = (w) => w.toLowerCase().replace(/[^\w]/g, '');
     const sourceWords = new Set(
       referenceText.split(/\s+/).map(cleanWord).filter(w => w.length > 0)
     );
-
     const tokens = sentenceText.split(/(\s+|[^\w\s]+)/);
     return tokens.map((token, idx) => {
       const cleaned = cleanWord(token);
@@ -101,18 +64,18 @@ function Report({ reportId, onViewHome }) {
 
   return (
     <div className="report-wrap">
-      {/* Header section */}
+      {/* Header */}
       <div className="report-header">
         <div>
           <span className="rh-meta">Analysis Summary Report</span>
           <h1 className="rh-title">{filename || 'Document Checked'}</h1>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
-          <button 
-            className="pill print-hide" 
+          <button
+            className="pill print-hide"
             onClick={() => window.print()}
-            style={{ 
-              border: '1px solid var(--accent)', 
+            style={{
+              border: '1px solid var(--accent)',
               color: 'var(--accent)',
               background: 'var(--accent-soft)'
             }}
@@ -125,9 +88,9 @@ function Report({ reportId, onViewHome }) {
         </div>
       </div>
 
-      {/* Split dashboard layout */}
+      {/* Dashboard Grid */}
       <div className="report-grid">
-        {/* Left Side: Document Viewer */}
+        {/* Left — Document Viewer */}
         <div>
           <div className="pane-header">
             <h2>Document Content</h2>
@@ -159,9 +122,9 @@ function Report({ reportId, onViewHome }) {
           </div>
         </div>
 
-        {/* Right Side: Analysis Panels */}
+        {/* Right — Inspector Pane */}
         <div className="inspector-pane">
-          {/* Circular Score Gauge Card */}
+          {/* Score Gauge */}
           <div className="verdict-card">
             <div className="gauge-section">
               <div className="score-ring">
@@ -186,12 +149,11 @@ function Report({ reportId, onViewHome }) {
                   {similarity >= 30 ? 'Plagiarism Detected' : 'Clean Document'}
                 </div>
                 <div className="gd-summary">
-                  Our algorithm matched {similarity}% of the words to web resources. The document contains {unique_percentage}% unique text.
+                  Matched {similarity}% of words to web sources. {unique_percentage}% text is unique.
                 </div>
               </div>
             </div>
 
-            {/* Unique vs Plagiarised progress bars */}
             <div className="metrics-bar-grid">
               <div className="metric-bar-item">
                 <div className="mbi-header">
@@ -199,10 +161,7 @@ function Report({ reportId, onViewHome }) {
                   <span style={{ color: 'var(--red)' }}>{similarity}%</span>
                 </div>
                 <div className="mbi-bar-bg">
-                  <div
-                    className="mbi-bar-fill"
-                    style={{ width: `${similarity}%`, background: 'var(--red)' }}
-                  ></div>
+                  <div className="mbi-bar-fill" style={{ width: `${similarity}%`, background: 'var(--red)' }}></div>
                 </div>
               </div>
               <div className="metric-bar-item">
@@ -211,16 +170,13 @@ function Report({ reportId, onViewHome }) {
                   <span style={{ color: 'var(--green)' }}>{unique_percentage}%</span>
                 </div>
                 <div className="mbi-bar-bg">
-                  <div
-                    className="mbi-bar-fill"
-                    style={{ width: `${unique_percentage}%`, background: 'var(--green)' }}
-                  ></div>
+                  <div className="mbi-bar-fill" style={{ width: `${unique_percentage}%`, background: 'var(--green)' }}></div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Sources list tab card */}
+          {/* Sources List */}
           <div className="verdict-card">
             <div className="tab-selector">
               <button
@@ -230,7 +186,6 @@ function Report({ reportId, onViewHome }) {
                 Top Web Sources ({all_sources?.length || 0})
               </button>
             </div>
-
             {activeTab === 'sources' && (
               <div className="sources-list">
                 {all_sources && all_sources.length > 0 ? (
@@ -248,9 +203,7 @@ function Report({ reportId, onViewHome }) {
                         </a>
                         <div className="source-badge-row">
                           <span className="source-badge web-source">WEB MATCH</span>
-                          <span className="source-matches-tag">
-                            {src.match_count} sentences
-                          </span>
+                          <span className="source-matches-tag">{src.match_count} sentences</span>
                         </div>
                       </div>
                       <div className="source-pct">{src.percentage}%</div>
@@ -266,13 +219,12 @@ function Report({ reportId, onViewHome }) {
             )}
           </div>
 
-          {/* Match Inspector side-by-side compare card */}
+          {/* Match Inspector */}
           <div className="match-inspector-card">
             <div className="pane-header">
               <h2>Match Inspector</h2>
-              <span className="pane-subtitle">Select a highlighted sentence to inspect matching context side-by-side.</span>
+              <span className="pane-subtitle">Select a highlighted sentence to inspect source overlaps.</span>
             </div>
-
             {selectedSentence ? (
               <div>
                 <div className="inspector-source-wrap">

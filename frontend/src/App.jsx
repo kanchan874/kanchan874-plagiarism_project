@@ -4,7 +4,7 @@ import Report from './pages/Report';
 
 function App() {
   const [view, setView] = useState('home');
-  const [reportId, setReportId] = useState(null);
+  const [reportData, setReportData] = useState(null);
 
   return (
     <div>
@@ -21,7 +21,7 @@ function App() {
             >
               Checker Dashboard
             </button>
-            {reportId && (
+            {reportData && (
               <button 
                 className={`pill ${view === 'report' ? 'active' : ''}`}
                 onClick={() => setView('report')}
@@ -35,12 +35,12 @@ function App() {
 
       {/* Main Panel Views */}
       {view === 'home' ? (
-        <Home onViewReport={(id) => {
-          setReportId(id);
+        <Home onViewReport={(data) => {
+          setReportData(data);
           setView('report');
         }} />
       ) : (
-        <Report reportId={reportId} onViewHome={() => setView('home')} />
+        <Report reportData={reportData} onViewHome={() => setView('home')} />
       )}
     </div>
   );

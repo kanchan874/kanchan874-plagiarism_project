@@ -128,7 +128,9 @@ function Home({ onViewReport }) {
       setProgress(100);
       setTimeout(() => {
         setLoading(false);
-        onViewReport(response.data.result_id);
+        // Pass the FULL report data object to App state.
+        // This avoids needing a second GET /api/report/:id call on Vercel.
+        onViewReport(response.data);
       }, 500);
 
     } catch (err) {
