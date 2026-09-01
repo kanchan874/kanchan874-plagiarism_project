@@ -9,14 +9,7 @@ const readTxt = async (filepath) => {
 };
 
 const readPdf = async (filepath) => {
-  // Polyfill DOMMatrix for Node.js — pdf-parse v2 uses canvas which calls DOMMatrix (browser-only API)
-  if (typeof globalThis.DOMMatrix === 'undefined') {
-    globalThis.DOMMatrix = class DOMMatrix {
-      constructor() { this.a=1; this.b=0; this.c=0; this.d=1; this.e=0; this.f=0; }
-      static fromMatrix(m) { return new DOMMatrix(); }
-    };
-  }
-  // Lazy-load pdf-parse only when needed — prevents Vercel startup crash
+  // pdf-parse v1.1.1: exports a direct async function — call with Buffer
   const pdfParse = require('pdf-parse');
   const buffer = await fs.readFile(filepath);
   const data = await pdfParse(buffer);

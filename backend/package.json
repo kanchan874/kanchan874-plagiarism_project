@@ -19,6 +19,6 @@
     "mammoth": "^1.12.2",
     "mongoose": "^9.9.4",
     "multer": "^2.3.0",
-    "pdf-parse": "^2.4.5"
+    "pdf-parse": "^1.1.1"
   }
 }
